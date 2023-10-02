@@ -14,6 +14,10 @@ commands:
 
 args:
 - note: the name of a note, without filename extension (can include a folder prefix); e.g. "hello", "work/tasks", etc
+
+environment variables:
+- EDITOR: the editor to use (e.g. vim)
+- NOTES_DIR (optional): defaults to ~/.note-store
 '
 
 NOTES_DIR=${NOTES_DIR:-~/.note-store}
