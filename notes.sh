@@ -226,15 +226,15 @@ main() {
 			;;
 
 		*)
+			check_for_init
 			if [[ -z $cmd ]]; then
-				check_for_init
 				list_notes
 			else
 				local name=$1
 				if note_exists $name; then
 					edit_note $name
 				else
-					echo "Unknown command."
+					echo "Unknown command. Run 'notes -h' for help."
 					exit 1
 				fi
 			fi
