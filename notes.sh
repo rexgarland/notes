@@ -292,8 +292,7 @@ main() {
 			else
 				local name=$1
 				if note_exists $name; then
-					edit_note $name
-					commit
+					print_note $name
 				else
 					echo "Unknown command. Run 'notes -h' for help."
 					exit 1
