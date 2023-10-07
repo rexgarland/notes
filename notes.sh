@@ -46,12 +46,22 @@ delete_note() {
 	rm $gpgfile
 }
 
-check_note_exists() {
+note_exists() {
 	local name=$1
 	local file=$(name_to_file $name)
 	local gpgfile=$file.gpg
 
 	if [[ ! -f $gpgfile ]]; then
+		return 1
+	else
+		return 0
+	fi
+}
+
+check_note_exists() {
+	local name=$1
+
+	if ! note_exists $name; then
 		echo "Could not find note."
 		exit 1
 	fi
@@ -220,8 +230,13 @@ main() {
 				check_for_init
 				list_notes
 			else
-				echo "Unknown command."
-				exit 1
+				local name=$1
+				if note_exists $name; then
+					edit_note $name
+				else
+					echo "Unknown command."
+					exit 1
+				fi
 			fi
 			;;
 	esac
