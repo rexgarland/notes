@@ -209,6 +209,13 @@ run_git_command() {
 	cd - >/dev/null
 }
 
+commit() {
+	if git_initialized; then
+		run_git_command add .
+		run_git_command commit -m "save"
+	fi
+}
+
 main_git() {
 	local cmd=$1
 	if [[ "$cmd" = "init" ]]; then
@@ -230,6 +237,7 @@ main() {
 		init)
 			local gpgid=$2
 			init_with_gpg_id $gpgid
+			commit
 			;;
 
 		show|print)
@@ -245,6 +253,7 @@ main() {
 			local name=$2
 			check_note_does_not_exist $name
 			add_note $name
+			commit
 			;;
 
 		edit)
@@ -252,6 +261,7 @@ main() {
 			local name=$2
 			check_note_exists $name
 			edit_note $name
+			commit
 			;;
 
 		delete)
@@ -260,6 +270,7 @@ main() {
 			check_valid_name $name
 			check_note_exists $name
 			delete_note $name
+			commit
 			;;
 
 		list)
@@ -282,6 +293,7 @@ main() {
 				local name=$1
 				if note_exists $name; then
 					edit_note $name
+					commit
 				else
 					echo "Unknown command. Run 'notes -h' for help."
 					exit 1
