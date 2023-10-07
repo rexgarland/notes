@@ -177,6 +177,48 @@ init_with_gpg_id() {
 	echo $gpgid > $NOTES_DIR/.gpg-id
 }
 
+git_initialized() {
+	if [[ ! -d $NOTES_DIR/.git ]]; then
+		return 1
+	fi
+
+	if [[ ! -f $NOTES_DIR/.gitattributes ]]; then
+		return 1
+	fi
+
+	return 0
+}
+
+check_for_git_init() {
+	if ! git_initialized; then
+		echo "Git repo not initialized for notes. Run 'notes git init' first."
+		exit 1
+	fi
+}
+
+initialize_git() {
+	cd $NOTES_DIR
+	git init
+	echo "*.gpg diff=gpg" >>.gitattributes
+	cd - >/dev/null
+}
+
+run_git_command() {
+	cd $NOTES_DIR
+	git $@
+	cd - >/dev/null
+}
+
+main_git() {
+	local cmd=$1
+	if [[ "$cmd" = "init" ]]; then
+		initialize_git
+	else
+		check_for_git_init
+		run_git_command $@
+	fi
+}
+
 main() {
 	local cmd=$1
 
@@ -223,6 +265,13 @@ main() {
 		list)
 			check_for_init
 			list_notes
+			;;
+
+		git)
+			check_for_init
+			shift
+			local args="$@"
+			main_git $args
 			;;
 
 		*)
