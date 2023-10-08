@@ -39,6 +39,13 @@ get_gpg_id() {
 
 #################### checkers #####################
 
+check_for_editor() {
+	if [[ -z $EDITOR ]]; then
+		echo "Please set your EDITOR before using notes."
+		exit 1
+	fi
+}
+
 initialized() {
 	if [[ ! -d $NOTES_DIR ]]; then
 		return 1
@@ -242,6 +249,8 @@ main_git() {
 ###################### main #######################
 
 main() {
+	check_for_editor
+
 	local cmd=$1
 
 	case $cmd in
