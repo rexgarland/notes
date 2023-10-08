@@ -39,15 +39,21 @@ get_gpg_id() {
 
 #################### checkers #####################
 
-check_for_init() {
+initialized() {
 	if [[ ! -d $NOTES_DIR ]]; then
-		echo "Notes not initialized yet. Please run init first."
-		exit 1
+		return 1
 	fi
 	local gpgfile=$NOTES_DIR/.gpg-id
 	if [[ ! -f $gpgfile ]]; then
-		echo "Could not find gpg id. Please rerun initialization."
-		exit 1;
+		return 1
+	fi
+	return 0
+}
+
+check_for_init() {
+	if ! initialized; then
+		echo "Notes not initialized. Please run 'notes init <gpg-id>' first."
+		exit 1
 	fi
 }
 
@@ -135,6 +141,11 @@ init_with_gpg_id() {
 }
 
 initialize_git() {
+	if git_initialized; then
+		echo "Notes repo already initialized."
+		exit 1
+	fi
+
 	cd $NOTES_DIR
 	git init
 	echo "*.gpg diff=gpg" >>.gitattributes
@@ -245,7 +256,7 @@ main() {
 			;;
 
 		init)
-			local gpgid=$2
+			local gpgid=${2:?Please specify a gpg id.}
 			init_with_gpg_id $gpgid
 			commit
 			;;
