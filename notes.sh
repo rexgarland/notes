@@ -117,8 +117,7 @@ check_note_does_not_exist() {
 encrypt() {
 	local file=$1
 	local gpgid=$(get_gpg_id)
-	if ! gpg --recipient "$gpgid" --encrypt $file
-	then
+	if ! gpg --recipient "$gpgid" --encrypt $file; then
 		if [[ -f $file.gpg ]]; then
 			rm $file.gpg
 		fi
@@ -137,7 +136,7 @@ decrypt() {
 init_with_gpg_id() {
 	local gpgid=$1
 	mkdir -p $NOTES_DIR
-	echo $gpgid > $NOTES_DIR/.gpg-id
+	echo $gpgid >$NOTES_DIR/.gpg-id
 }
 
 initialize_git() {
@@ -169,13 +168,12 @@ add_note() {
 	local folder=$(dirname $file)
 
 	mkdir -p $folder
-	echo -n "" > $file
-	if ! encrypt $file
-	then
+	echo -n "" >$file
+	if ! encrypt $file; then
 		rm $file
 		exit 1
 	fi
-	
+
 	edit_note $name
 }
 
@@ -183,9 +181,8 @@ edit_note() {
 	local name=$1
 	local file=$(name_to_file $name)
 	local gpgfile=$file.gpg
-	
-	if ! decrypt $gpgfile >$file
-	then
+
+	if ! decrypt $gpgfile >$file; then
 		if [[ -f $file ]]; then
 			rm $file
 		fi
@@ -193,8 +190,7 @@ edit_note() {
 		exit 1
 	fi
 
-	if ! $EDITOR $file
-	then
+	if ! $EDITOR $file; then
 		if [[ -f $file ]]; then
 			rm $file
 		fi
@@ -204,8 +200,7 @@ edit_note() {
 
 	cp $gpgfile $gpgfile.backup
 	rm $gpgfile
-	if ! encrypt $file
-	then
+	if ! encrypt $file; then
 		cp $gpgfile.backup $gpgfile
 		echo "Could not encrypt note. Reverted to previous version."
 	fi
@@ -220,7 +215,6 @@ delete_note() {
 	local gpgfile=$file.gpg
 	rm $gpgfile
 }
-
 
 run_git_command() {
 	cd $NOTES_DIR
@@ -251,75 +245,75 @@ main() {
 	local cmd=$1
 
 	case $cmd in
-		-h)
-			echo "$HELP_DOC"
-			;;
+	-h)
+		echo "$HELP_DOC"
+		;;
 
-		init)
-			local gpgid=${2:?Please specify a gpg id.}
-			init_with_gpg_id $gpgid
-			commit
-			;;
+	init)
+		local gpgid=${2:?Please specify a gpg id.}
+		init_with_gpg_id $gpgid
+		commit
+		;;
 
-		show|print)
-			check_for_init
-			local name=$2
-			check_valid_name $name
-			check_note_exists $name
-			print_note $name
-			;;
+	show | print)
+		check_for_init
+		local name=$2
+		check_valid_name $name
+		check_note_exists $name
+		print_note $name
+		;;
 
-		add|insert|new)
-			check_for_init
-			local name=$2
-			check_note_does_not_exist $name
-			add_note $name
-			commit
-			;;
+	add | insert | new)
+		check_for_init
+		local name=$2
+		check_note_does_not_exist $name
+		add_note $name
+		commit
+		;;
 
-		edit)
-			check_for_init
-			local name=$2
-			check_note_exists $name
-			edit_note $name
-			commit
-			;;
+	edit)
+		check_for_init
+		local name=$2
+		check_note_exists $name
+		edit_note $name
+		commit
+		;;
 
-		delete)
-			check_for_init
-			local name=$2
-			check_valid_name $name
-			check_note_exists $name
-			delete_note $name
-			commit
-			;;
+	delete)
+		check_for_init
+		local name=$2
+		check_valid_name $name
+		check_note_exists $name
+		delete_note $name
+		commit
+		;;
 
-		list)
-			check_for_init
+	list)
+		check_for_init
+		list_notes
+		;;
+
+	git)
+		check_for_init
+		shift
+		local args="$@"
+		main_git $args
+		;;
+
+	*)
+		check_for_init
+		if [[ -z $cmd ]]; then
 			list_notes
-			;;
-
-		git)
-			check_for_init
-			shift
-			local args="$@"
-			main_git $args
-			;;
-
-		*)
-			check_for_init
-			if [[ -z $cmd ]]; then
-				list_notes
+		else
+			local name=$1
+			if note_exists $name; then
+				print_note $name
 			else
-				local name=$1
-				if note_exists $name; then
-					print_note $name
-				else
-					echo "Unknown command. Run 'notes -h' for help."
-					exit 1
-				fi
+				echo "Unknown command. Run 'notes -h' for help."
+				exit 1
 			fi
-			;;
+		fi
+		;;
 	esac
 }
 
