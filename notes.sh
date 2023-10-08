@@ -6,11 +6,15 @@ notes [command] [args]
 
 commands:
 - init: initialize the database if needed
-- add|insert|new [note]: create a new note and start editing it
-- edit [note]
-- show|print [note]
-- delete [note]
-- list: list all notes in the database
+- add|insert|new <name>: create a new note and start editing it
+- edit <name>
+- show|print <name>: print decrypted note to stdout
+- delete <name>
+- list|"": list all notes in the database
+
+git commands:
+- git init: initialize a git repo in NOTES_DIR to track all changes going forward
+- git <anything>: run any other git command from within NOTES_DIR
 
 args:
 - note: the name of a note, without filename extension (can include a folder prefix); e.g. "hello", "work/tasks", etc
