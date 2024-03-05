@@ -159,6 +159,7 @@ initialize_git() {
 	cd $NOTES_DIR
 	git init
 	echo "*.gpg diff=gpg" >>.gitattributes
+	echo "**/*.md" >>.gitignore
 	cd - >/dev/null
 }
 
