@@ -269,7 +269,7 @@ main() {
 		commit
 		;;
 
-	show | print)
+	show | print | cat)
 		check_for_init
 		local name=$2
 		check_valid_name $name
