@@ -302,7 +302,7 @@ main() {
 		commit
 		;;
 
-	list)
+	list | ls)
 		check_for_init
 		list_notes
 		;;
@@ -323,7 +323,7 @@ main() {
 			if note_exists $name; then
 				print_note $name
 			else
-				echo "Unknown command. Run 'notes -h' for help."
+				printf "Unknown command '%s'. Run 'notes -h' for help." $cmd
 				exit 1
 			fi
 		fi
