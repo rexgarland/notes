@@ -21,7 +21,7 @@ args:
 
 environment variables:
 - EDITOR: the editor to use (e.g. vim)
-- NOTES_DIR (optional): defaults to ~/.note-store
+- NOTES_DIR (optional): defaults to $HOME/.note-store
 
 CAVEATS:
 - If your editor creates swap files to store temporary changes (e.g. for auto-backup), this will leak sensitive note data outside of the protection of this tool. Make sure to disable swap files for your $EDITOR.
