@@ -41,16 +41,7 @@ get_gpg_id() {
 	cat $gpgfile | tr -d "\n"
 }
 
-#################### checkers #####################
-
-check_for_editor() {
-	if [[ -z $EDITOR ]]; then
-		echo "Please set your EDITOR before using notes."
-		exit 1
-	fi
-}
-
-initialized() {
+is_store_initialized() {
 	if [[ ! -d $NOTES_DIR ]]; then
 		return 1
 	fi
@@ -61,14 +52,7 @@ initialized() {
 	return 0
 }
 
-check_for_init() {
-	if ! initialized; then
-		echo "Notes not initialized. Please run 'notes init <gpg-id>' first."
-		exit 1
-	fi
-}
-
-git_initialized() {
+is_git_initialized() {
 	if [[ ! -d $NOTES_DIR/.git ]]; then
 		return 1
 	fi
@@ -78,21 +62,6 @@ git_initialized() {
 	fi
 
 	return 0
-}
-
-check_for_git_init() {
-	if ! git_initialized; then
-		echo "Git repo not initialized for notes. Run 'notes git init' first."
-		exit 1
-	fi
-}
-
-check_valid_name() {
-	local name=$1
-	if [[ -z $name ]]; then
-		echo "Please specify the note's name."
-		exit 1
-	fi
 }
 
 note_exists() {
@@ -107,7 +76,38 @@ note_exists() {
 	fi
 }
 
-check_note_exists() {
+#################### assertions #####################
+
+ensure_editor_is_set() {
+	if [[ -z $EDITOR ]]; then
+		echo "Please set your EDITOR before using notes."
+		exit 1
+	fi
+}
+
+ensure_store_initialized() {
+	if ! is_store_initialized; then
+		echo "Notes not initialized. Please run 'notes init <gpg-id>' first."
+		exit 1
+	fi
+}
+
+ensure_git_initialized() {
+	if ! is_git_initialized; then
+		echo "Git repo not initialized for notes. Run 'notes git init' first."
+		exit 1
+	fi
+}
+
+ensure_valid_name() {
+	local name=$1
+	if [[ -z $name ]]; then
+		echo "Please specify the note's name."
+		exit 1
+	fi
+}
+
+ensure_note_exists() {
 	local name=$1
 	if ! note_exists $name; then
 		echo "Could not find note."
@@ -115,7 +115,7 @@ check_note_exists() {
 	fi
 }
 
-check_note_does_not_exist() {
+ensure_note_does_not_exist() {
 	local name=$1
 	if note_exists $name; then
 		echo "Note already exists"
@@ -151,7 +151,7 @@ init_with_gpg_id() {
 }
 
 initialize_git() {
-	if git_initialized; then
+	if is_git_initialized; then
 		echo "Notes repo already initialized."
 		exit 1
 	fi
@@ -185,8 +185,6 @@ add_note() {
 		rm $file
 		exit 1
 	fi
-
-	edit_note $name
 }
 
 edit_note() {
@@ -235,7 +233,7 @@ run_git_command() {
 }
 
 commit() {
-	if git_initialized; then
+	if is_git_initialized; then
 		run_git_command add .
 		run_git_command commit -m "save"
 	fi
@@ -246,7 +244,7 @@ main_git() {
 	if [[ "$cmd" = "init" ]]; then
 		initialize_git
 	else
-		check_for_git_init
+		ensure_git_initialized
 		run_git_command $@
 	fi
 }
@@ -254,7 +252,7 @@ main_git() {
 ###################### main #######################
 
 main() {
-	check_for_editor
+	ensure_editor_is_set
 
 	local cmd=$1
 
@@ -270,52 +268,55 @@ main() {
 		;;
 
 	show | print | cat)
-		check_for_init
+		ensure_store_initialized
 		local name=$2
-		check_valid_name $name
-		check_note_exists $name
+		ensure_valid_name $name
+		ensure_note_exists $name
 		print_note $name
 		;;
 
 	add | insert | new)
-		check_for_init
+		ensure_store_initialized
 		local name=$2
-		check_note_does_not_exist $name
+		ensure_note_does_not_exist $name
 		add_note $name
+		edit_note $name
 		commit
 		;;
 
 	edit)
-		check_for_init
+		ensure_store_initialized
 		local name=$2
-		check_note_exists $name
+		if ! note_exists $name; then
+			add_note $name
+		fi
 		edit_note $name
 		commit
 		;;
 
 	delete)
-		check_for_init
+		ensure_store_initialized
 		local name=$2
-		check_valid_name $name
-		check_note_exists $name
+		ensure_valid_name $name
+		ensure_note_exists $name
 		delete_note $name
 		commit
 		;;
 
 	list | ls)
-		check_for_init
+		ensure_store_initialized
 		list_notes
 		;;
 
 	git)
-		check_for_init
+		ensure_store_initialized
 		shift
 		local args="$@"
 		main_git $args
 		;;
 
 	*)
-		check_for_init
+		ensure_store_initialized
 		if [[ -z $cmd ]]; then
 			list_notes
 		else
