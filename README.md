@@ -1,9 +1,8 @@
 # Notes
 
-Write gpg-encrypted notes.
+Local notes, gpg-encrypted. Simple interface (similar to `pass`). Single-file installation.
 
-If you already use `pass`, you will know how to use this tool. It's basically the same commands, but for multiline markdown notes.
+![screenshot](screenshot.png)
 
-## Issues
-
-File bugs and todos on the [issue tracker](https://todo.sr.ht/~rexgarland/notes).
+If you already use GNU `pass`, you will know how to use this tool. 
+It's basically the same thing, but for multiline notes instead.
