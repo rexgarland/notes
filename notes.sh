@@ -6,11 +6,13 @@ notes [command] [args]
 
 commands:
 - init: initialize the database if needed
+- git init: initialize a git repo to automatically track changes
+- list|"": list all notes in the database (default command)
 - add|insert|new <name>: create a new note and start editing it
-- edit <name>
+- edit <name>: edit a note, creating it first if needed
 - show|print <name>: print decrypted note to stdout
-- delete <name>
-- list|"": list all notes in the database
+- delete|remove <name>: remove a note
+- clean: remove any plaintext files in the notes store
 
 git commands:
 - git init: initialize a git repo in NOTES_DIR to track all changes going forward
@@ -164,7 +166,10 @@ initialize_git() {
 }
 
 list_notes() {
-	tree -C --noreport $NOTES_DIR | tail -n +2 | sed 's#.md.gpg##' | cat <(echo "Notes store:") -
+	echo "Notes store:"
+	# Elide .md.gpg, highlight plaintext files in red
+	tree -C --noreport $NOTES_DIR | tail -n +2 | sed 's#.md.gpg##' | sed -r 's#([A-z]*.md)#\x1b[1;91\1\x1b[0m#'
+	# See https://git.zx2c4.com/password-store/tree/src/password-store.sh (around line 405, search "tree") for another example
 }
 
 print_note() {
@@ -187,36 +192,54 @@ add_note() {
 	fi
 }
 
+remove_all_plaintext() {
+	cd $NOTES_DIR
+	# delete files not matching the "*.md.gpg" format, ignoring protected files
+	# https://unix.stackexchange.com/questions/96432/find-files-not-matching-list-of-filename-patterns
+	# https://stackoverflow.com/questions/4210042/how-do-i-exclude-a-directory-when-using-find
+	files_PLAINTEXT="$(find . -type f \! \( -path "./*.md.gpg" -o -path "./.git/*" -o -name ".gitignore" -o -name ".gitattributes" -o -name ".gpg-id" \))"
+	echo "$files_PLAINTEXT" | xargs -n1 rm
+	cd - >/dev/null
+}
+
 edit_note() {
 	local name=$1
-	local file=$(name_to_file $name)
-	local gpgfile=$file.gpg
+	local file_PLAINTEXT=$(name_to_file $name)
+	local gpgfile=$file_PLAINTEXT.gpg
 
-	if ! decrypt $gpgfile >$file; then
-		if [[ -f $file ]]; then
-			rm $file
+	# decrypt note to temporary plaintext file
+
+	if ! decrypt $gpgfile >$file_PLAINTEXT; then
+		if [[ -f $file_PLAINTEXT ]]; then
+			rm $file_PLAINTEXT # always remove plaintext
 		fi
 		echo "Could not decrypt note."
 		exit 1
 	fi
 
-	if ! $EDITOR $file; then
-		if [[ -f $file ]]; then
-			rm $file
+	# edit plaintext
+
+	if ! $EDITOR $file_PLAINTEXT; then
+		if [[ -f $file_PLAINTEXT ]]; then
+			rm $file_PLAINTEXT # always remove plaintext
 		fi
-		echo "Editor errored out. Ignored changes to note."
+		echo "Editor bailed. Ignored changes to note."
 		exit 1
 	fi
 
+	# encrypt back
+
 	cp $gpgfile $gpgfile.backup
 	rm $gpgfile
-	if ! encrypt $file; then
+	if ! encrypt $file_PLAINTEXT; then
 		cp $gpgfile.backup $gpgfile
 		echo "Could not encrypt note. Reverted to previous version."
 	fi
 	rm $gpgfile.backup
 
-	rm $file
+	# remove temp plaintext file
+
+	rm $file_PLAINTEXT
 }
 
 delete_note() {
@@ -313,6 +336,11 @@ main() {
 		shift
 		local args="$@"
 		main_git $args
+		;;
+
+	clean)
+		ensure_store_initialized
+		remove_all_plaintext
 		;;
 
 	*)
