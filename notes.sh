@@ -294,7 +294,7 @@ main() {
 		commit
 		;;
 
-	delete)
+	delete | remove)
 		ensure_store_initialized
 		local name=$2
 		ensure_valid_name $name
