@@ -27,7 +27,7 @@ CAVEATS:
 - If your editor creates swap files to store temporary changes (e.g. for auto-backup), this will leak sensitive note data outside of the protection of this tool. Make sure to disable swap files for your $EDITOR.
 '
 
-NOTES_DIR=${NOTES_DIR:-~/.note-store}
+NOTES_DIR=${NOTES_DIR:-$HOME/.note-store}
 
 ###################### utils ######################
 
