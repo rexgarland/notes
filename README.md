@@ -14,15 +14,20 @@ Run `notes -h` for a full description of available commands.
 Basic usage
 
 ```shell
+# Move notes.sh somewhere your shell can run it (aliased "notes" below)
+
+# Initialize the notes dir and encryption
 notes init <gpg-id>
+
+# Make a note, edit it with your $EDITOR (e.g. named "hello")
+notes add hello
 notes edit hello # requires gpg signin
-# type stuff in your chosen editor and save...
 
 notes show hello # print it (requires logged in gpg, same as above)
 notes remove hello # delete it
 ```
 
-Using with git
+Using git
 
 ```shell
 notes git init # init repo within $NOTES_DIR (default ~/.note-store)
