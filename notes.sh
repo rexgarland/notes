@@ -5,7 +5,7 @@ HELP_DOC='Usage:
 notes [command] [args]
 
 commands:
-- init: initialize the database if needed
+- init: initialize the database (if needed) by providing your gpg id
 - git init: initialize a git repo to automatically track changes
 - list|"": list all notes in the database (default command)
 - add|insert|new <name>: create a new note and start editing it
@@ -130,6 +130,7 @@ ensure_note_does_not_exist() {
 encrypt() {
 	local file=$1
 	local gpgid=$(get_gpg_id)
+	# Creates a file with .gpg suffixed
 	if ! gpg --recipient "$gpgid" --encrypt $file; then
 		if [[ -f $file.gpg ]]; then
 			rm $file.gpg
@@ -141,15 +142,25 @@ encrypt() {
 
 decrypt() {
 	local file=$1
+	# Just prints the file to stdout.
+	# (Assumes same gpg id as used during encryption)
 	gpg --decrypt --quiet $file
 }
 
 ##################### actions #####################
 
 init_with_gpg_id() {
-	local gpgid=$1
+	local gpg_id_reference=${1:?Please provide a way to reference a gpg id}
+	# We need to resolve the key's fingerprint from the provided reference (e.g. it could be a username or email), 
+	# for uniqueness.
+	gpgid=$(gpg --list-keys --with-colons $gpg_id_reference | awk -F: '$1 == "fpr" {print $10}' | head -1 | tr -d "\n")
+	if [ -z $gpgid ]; then
+	  echo "Provided gpg id could not be resolved. Please check available keys on this machine."
+	  exit 1
+	  fi
 	mkdir -p $NOTES_DIR
 	echo $gpgid >$NOTES_DIR/.gpg-id
+	echo "Note store successfully initialized at \"$NOTES_DIR\"."
 }
 
 initialize_git() {
@@ -285,7 +296,7 @@ main() {
 		;;
 
 	init)
-		local gpgid=${2:?Please specify a gpg id.}
+		local gpgid=${2:?Please specify a gpg id (try \"gpg --list-keys\").}
 		init_with_gpg_id $gpgid
 		commit
 		;;
