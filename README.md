@@ -9,6 +9,33 @@ Single-file installation, < 400 lines of code.
 
 Run `notes -h` for a full description of available commands.
 
+## Usage
+
+Basic usage
+
+```shell
+notes init <gpg-id>
+notes edit hello # requires gpg signin
+# type stuff in your chosen editor and save...
+
+notes show hello # print it (requires logged in gpg, same as above)
+notes remove hello # delete it
+```
+
+Using with git
+
+```shell
+notes git init # init repo within $NOTES_DIR (default ~/.note-store)
+# Now any changes to $NOTES_DIR are automatically committed.
+# Plaintext files are excluded from git (search .gitignore in the code)
+
+notes git push # optionally, push to a remote (it's encrypted, after all)
+notes git <any other git command, run from within $NOTES_DIR>
+```
+
+Plaintext versions of the files are never committed to git or stored more than during duration of editing.
+This is not 100% foolproof, see security notes below.
+
 ## Dependencies
 
 - gpg
@@ -17,33 +44,14 @@ Run `notes -h` for a full description of available commands.
 - tree
 - find
 
-## Storage
+## Notes store
 
 Notes are stored in `$NOTES_DIR`, which defaults to `$HOME/.note-store` if it is unset.
 
 Each note is stored as a file, with filename formatted as `<name>.md.gpg`.
 The contents of each note are never stored in plain text, only the filenames themselves.
 
-## Editing
-
 When running `note edit <note name>`, the associated note is decrypted using your default gpg key, then opened using your `$EDITOR`.
-
-## Git
-
-You can optionally initialize a git repo within the notes directory by running `notes git init`.
-After that, every change to the store will be automatically tracked with a new commit to that repo.
-
-You can also run any git other command from within that directory by simply prepending the `notes` command, like so:
-
-```
-notes git <normal git commands + args>
-```
-
-For example, creating an encrypted backup of your entire notes storage is as easy as pushing to a remote repository (since notes are only stored in their encrypted form).
-
-```
-notes git push <remote>
-```
 
 ## Known security issues
 
